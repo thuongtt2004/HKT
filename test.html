@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Người Dùng - Cửa Hàng Giày Bóng Đá Online</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+        .header {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin: 10px 0 5px;
+        }
+        input[type="text"], input[type="password"], input[type="tel"] {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button[type="submit"], button.delete {
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button[type="submit"]:hover, button.delete:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .back {
+            display: block;
+            width: fit-content;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .back:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Quản Lý Người Dùng</h1>
+    </div>
+    <div class="container">
+        <form id="addUserForm">
+            <label for="username">Tên Người Dùng:</label>
+            <input type="text" id="username" name="username" required>
+            
+            <label for="password">Mật Khẩu:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <label for="phone">Số Điện Thoại:</label>
+            <input type="tel" id="phone" name="phone" required>
+            
+            <label for="address">Địa Chỉ:</label>
+            <input type="text" id="address" name="address" required>
+            
+            <button type="submit">Thêm Người Dùng</button>
+        </form>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Người Dùng</th>
+                    <th>Tên Người Dùng</th>
+                    <th>Mật Khẩu</th>
+                    <th>Số Điện Thoại</th>
+                    <th>Địa Chỉ</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody id="user-list">
+                <!-- Người dùng sẽ được thêm vào đây -->
+            </tbody>
+        </table>
+        <a href="admin.html" class="back">Về Trang Quản Trị</a>
+    </div>
+    <script>
+        let userId = 1;
+
+        document.getElementById('addUserForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Ngăn chặn hành vi mặc định của form
+
+            // Lấy giá trị từ form
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+
+            // Tạo một dòng mới trong bảng
+            const userRow = document.createElement('tr');
+            userRow.innerHTML = `
+                <td>${userId++}</td>
+                <td>${username}</td>
+                <td>${password}</td>
+                <td>${phone}</td>
+                <td>${address}</td>
+                <td><button class="delete">Xóa</button></td>
+            `;
+
+            // Thêm dòng mới vào danh sách người dùng
+            document.getElementById('user-list').appendChild(userRow);
+
+            // Reset form
+            document.getElementById('addUserForm').reset();
+
+            // Thêm sự kiện xóa cho nút vừa tạo
+            userRow.querySelector('.delete').addEventListener('click', function() {
+                userRow.remove();
+            });
+        });
+
+        // Thêm sự kiện xóa cho các nút xóa đã tồn tại (nếu có)
+        document.querySelectorAll('.delete').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('tr').remove();
+            });
+        });
+    </script>
+</body>
+</html>
