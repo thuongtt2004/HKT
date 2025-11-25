@@ -94,6 +94,67 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Đăng nhập - TTHUONG Store</title>
     <link rel="stylesheet" href="css/auth.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 25px 0;
+            color: #666;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .divider span {
+            padding: 0 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .btn-google {
+            width: 100%;
+            padding: 14px;
+            background: #fff;
+            color: #333;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-google:hover {
+            background: #f8f9fa;
+            border-color: #4285f4;
+            color: #4285f4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.2);
+        }
+        
+        .btn-google img {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .google-icon {
+            font-size: 20px;
+            background: linear-gradient(to bottom, #4285f4, #34a853, #fbbc05, #ea4335);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
 <body>
     <div class="form-container">
@@ -102,6 +163,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php if ($error): ?>
             <div class="error-message">
                 <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['error'])): ?>
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <?php 
+                    switch($_GET['error']) {
+                        case 'google_auth_failed':
+                            echo 'Xác thực Google thất bại. Vui lòng thử lại.';
+                            break;
+                        case 'token_failed':
+                            echo 'Không thể lấy token từ Google. Vui lòng thử lại.';
+                            break;
+                        case 'no_email':
+                            echo 'Không lấy được email từ Google. Vui lòng thử lại.';
+                            break;
+                        case 'create_failed':
+                            echo 'Không thể tạo tài khoản. Vui lòng thử lại.';
+                            break;
+                        default:
+                            echo 'Có lỗi xảy ra. Vui lòng thử lại.';
+                    }
+                ?>
             </div>
         <?php endif; ?>
 
@@ -131,15 +216,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="submit" id="submitBtn">
                 <i class="fas fa-sign-in-alt"></i> Đăng nhập
             </button>
+        </form>
 
-            <div class="form-footer">
+        <div class="divider">
+            <span>HOẶC</span>
+        </div>
+
+        <button type="button" class="btn-google" onclick="loginWithGoogle()">
+            <span class="google-icon"><i class="fab fa-google"></i></span>
+            Đăng nhập bằng Google
+        </button>
+
+        <div class="form-footer">
                 <p>Chưa có tài khoản? <a href="register_page.php"><i class="fas fa-user-plus"></i> Đăng ký ngay</a></p>
                 <p><a href="home.php"><i class="fas fa-home"></i> Quay về trang chủ</a></p>
             </div>
-        </form>
     </div>
 
     <script>
+        <?php require_once('config/google_config.php'); ?>
+        
+        // Google OAuth Login
+        function loginWithGoogle() {
+            const clientId = '<?php echo GOOGLE_CLIENT_ID; ?>';
+            const redirectUri = '<?php echo GOOGLE_REDIRECT_URI; ?>';
+            const scope = 'email profile';
+            const responseType = 'code';
+            
+            const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
+                'client_id=' + encodeURIComponent(clientId) +
+                '&redirect_uri=' + encodeURIComponent(redirectUri) +
+                '&response_type=' + encodeURIComponent(responseType) +
+                '&scope=' + encodeURIComponent(scope) +
+                '&access_type=offline' +
+                '&prompt=consent';
+            
+            window.location.href = googleAuthUrl;
+        }
+        
         // Toggle password visibility
         function togglePassword(fieldId) {
             const field = document.getElementById(fieldId);
