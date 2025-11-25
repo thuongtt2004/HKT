@@ -18,6 +18,9 @@ $order_stmt = $conn->prepare($order_sql);
 $order_stmt->bind_param("i", $user_id);
 $order_stmt->execute();
 $orders = $order_stmt->get_result();
+
+// Số ngày cho phép trả hàng
+$return_days_limit = 7;
 ?>
 
 <!DOCTYPE html>
@@ -123,6 +126,77 @@ $orders = $order_stmt->get_result();
                         </div>
                     </div>
 
+                    <?php if ($order['order_status'] == 'Hoàn thành'): 
+                        $completed_date = $order['completed_date'] ? strtotime($order['completed_date']) : time();
+                        $days_passed = floor((time() - $completed_date) / 86400);
+                        $days_left = $return_days_limit - $days_passed;
+                        $customer_confirmed = $order['customer_confirmed'] ?? 0;
+                        $return_request = $order['return_request'] ?? 0;
+                        $return_status = $order['return_status'] ?? '';
+                    ?>
+                        <div class="order-actions" style="background:#f8f9fa;padding:20px;margin-top:15px;border-radius:8px;">
+                            <h4 style="margin-bottom:15px;color:#333;"><i class="fas fa-tasks"></i> Thao tác với đơn hàng</h4>
+                            
+                            <?php if ($return_request == 1): ?>
+                                <!-- Đã yêu cầu trả hàng -->
+                                <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:15px;border-radius:8px;">
+                                    <p style="margin:0;color:#856404;font-weight:600;">
+                                        <i class="fas fa-undo"></i> Đã gửi yêu cầu trả hàng/hoàn tiền
+                                    </p>
+                                    <p style="margin:8px 0 0 0;color:#856404;font-size:14px;">
+                                        <strong>Trạng thái:</strong> 
+                                        <span style="background:#fff;padding:4px 12px;border-radius:12px;display:inline-block;margin-top:5px;">
+                                            <?php echo $return_status; ?>
+                                        </span>
+                                    </p>
+                                    <?php if ($order['return_reason']): ?>
+                                        <p style="margin:8px 0 0 0;color:#856404;font-size:14px;">
+                                            <strong>Lý do:</strong> <?php echo htmlspecialchars($order['return_reason']); ?>
+                                        </p>
+                                    <?php endif; ?>
+                                </div>
+                            <?php elseif ($customer_confirmed == 1): ?>
+                                <!-- Đã xác nhận hài lòng -->
+                                <div style="background:#d4edda;border-left:4px solid #28a745;padding:15px;border-radius:8px;">
+                                    <p style="margin:0;color:#155724;font-weight:600;">
+                                        <i class="fas fa-check-circle"></i> Bạn đã xác nhận hài lòng với đơn hàng này
+                                    </p>
+                                    <p style="margin:8px 0 0 0;color:#155724;font-size:14px;">
+                                        Cảm ơn bạn đã tin tưởng và mua sắm tại TTHUONG Store!
+                                    </p>
+                                </div>
+                            <?php elseif ($days_left > 0): ?>
+                                <!-- Trong thời gian cho phép trả hàng -->
+                                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                    <button onclick="confirmDelivery(<?php echo $order['order_id']; ?>)" 
+                                            class="btn-confirm-delivery" 
+                                            style="flex:1;min-width:200px;padding:12px 20px;background:#28a745;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.3s;">
+                                        <i class="fas fa-check-circle"></i> Đã nhận hàng và hài lòng
+                                    </button>
+                                    <button onclick="openReturnModal(<?php echo $order['order_id']; ?>)" 
+                                            class="btn-request-return" 
+                                            style="flex:1;min-width:200px;padding:12px 20px;background:#dc3545;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.3s;">
+                                        <i class="fas fa-undo"></i> Yêu cầu trả hàng/hoàn tiền
+                                    </button>
+                                </div>
+                                <p style="margin:10px 0 0 0;color:#666;font-size:13px;">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Còn <strong><?php echo $days_left; ?> ngày</strong> để yêu cầu trả hàng/hoàn tiền
+                                </p>
+                            <?php else: ?>
+                                <!-- Hết thời gian trả hàng -->
+                                <div style="background:#f8d7da;border-left:4px solid #dc3545;padding:15px;border-radius:8px;">
+                                    <p style="margin:0;color:#721c24;font-weight:600;">
+                                        <i class="fas fa-exclamation-triangle"></i> Đã hết thời gian trả hàng/hoàn tiền
+                                    </p>
+                                    <p style="margin:8px 0 0 0;color:#721c24;font-size:14px;">
+                                        Thời gian cho phép trả hàng là <?php echo $return_days_limit; ?> ngày kể từ khi nhận hàng
+                                    </p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+
                     <?php if ($order['order_status'] == 'Đã giao hàng'): ?>
                         <div class="review-section">
                             <h4>Đánh giá sản phẩm</h4>
@@ -184,6 +258,122 @@ $orders = $order_stmt->get_result();
             </div>
         <?php endif; ?>
     </div>
+
+    <!-- Modal Yêu Cầu Trả Hàng -->
+    <div id="returnModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
+        <div style="background:white;border-radius:12px;padding:30px;max-width:500px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom:20px;color:#333;"><i class="fas fa-undo"></i> Yêu cầu trả hàng/hoàn tiền</h3>
+            <form id="returnForm">
+                <input type="hidden" id="return_order_id" name="order_id">
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;margin-bottom:8px;font-weight:600;color:#333;">
+                        Lý do trả hàng <span style="color:red;">*</span>
+                    </label>
+                    <textarea name="return_reason" 
+                              style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;min-height:120px;font-family:inherit;"
+                              placeholder="Vui lòng mô tả rõ lý do bạn muốn trả hàng (sản phẩm lỗi, không đúng mô tả, v.v.)"
+                              required></textarea>
+                </div>
+                <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:12px;margin-bottom:20px;border-radius:8px;">
+                    <p style="margin:0;color:#856404;font-size:14px;">
+                        <i class="fas fa-info-circle"></i> 
+                        Chúng tôi sẽ xem xét yêu cầu trong vòng 24-48h và liên hệ lại với bạn
+                    </p>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" onclick="closeReturnModal()" 
+                            style="padding:12px 24px;background:#6c757d;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
+                        Hủy
+                    </button>
+                    <button type="submit" 
+                            style="padding:12px 24px;background:#dc3545;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
+                        <i class="fas fa-paper-plane"></i> Gửi yêu cầu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Xác nhận đã nhận hàng
+        function confirmDelivery(orderId) {
+            if (confirm('Xác nhận bạn đã nhận hàng và hài lòng với sản phẩm?')) {
+                fetch('process_order_action.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'order_id=' + orderId + '&action=confirm_delivery'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) {
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    alert('Có lỗi xảy ra. Vui lòng thử lại!');
+                });
+            }
+        }
+
+        // Mở modal yêu cầu trả hàng
+        function openReturnModal(orderId) {
+            document.getElementById('return_order_id').value = orderId;
+            document.getElementById('returnModal').style.display = 'flex';
+        }
+
+        // Đóng modal
+        function closeReturnModal() {
+            document.getElementById('returnModal').style.display = 'none';
+            document.getElementById('returnForm').reset();
+        }
+
+        // Xử lý submit form trả hàng
+        document.getElementById('returnForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('action', 'request_return');
+            
+            fetch('process_order_action.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    closeReturnModal();
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                alert('Có lỗi xảy ra. Vui lòng thử lại!');
+            });
+        });
+
+        // Đóng modal khi click bên ngoài
+        document.getElementById('returnModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReturnModal();
+            }
+        });
+        
+        // Style hover cho buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmBtns = document.querySelectorAll('.btn-confirm-delivery');
+            confirmBtns.forEach(btn => {
+                btn.addEventListener('mouseenter', () => btn.style.background = '#218838');
+                btn.addEventListener('mouseleave', () => btn.style.background = '#28a745');
+            });
+            
+            const returnBtns = document.querySelectorAll('.btn-request-return');
+            returnBtns.forEach(btn => {
+                btn.addEventListener('mouseenter', () => btn.style.background = '#c82333');
+                btn.addEventListener('mouseleave', () => btn.style.background = '#dc3545');
+            });
+        });
+    </script>
 
     <?php include 'footer.php'; ?>
 </body>

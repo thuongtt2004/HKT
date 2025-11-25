@@ -49,11 +49,12 @@ if (isset($_POST['update_product'])) {
     $product_name = trim($_POST['product_name']);
     $price = floatval($_POST['price']);
     $stock_quantity = intval($_POST['stock_quantity']);
+    $sold_quantity = intval($_POST['sold_quantity']);
     $category_id = intval($_POST['category_id']);
     $description = trim($_POST['description']);
 
-    $stmt = $conn->prepare("UPDATE products SET product_name = ?, price = ?, stock_quantity = ?, category_id = ?, description = ? WHERE product_id = ?");
-    $stmt->bind_param("sdiisi", $product_name, $price, $stock_quantity, $category_id, $description, $product_id);
+    $stmt = $conn->prepare("UPDATE products SET product_name = ?, price = ?, stock_quantity = ?, sold_quantity = ?, category_id = ?, description = ? WHERE product_id = ?");
+    $stmt->bind_param("sdiidsi", $product_name, $price, $stock_quantity, $sold_quantity, $category_id, $description, $product_id);
 
     if ($stmt->execute()) {
         echo "<script>alert('Cập nhật sản phẩm thành công!');</script>";
@@ -159,8 +160,15 @@ while ($category = $categories_result->fetch_assoc()) {
                     <input type="number" name="price" id="edit_price" required>
                 </div>
                 
-                <label>Số lượng:</label>
-                <input type="number" name="stock_quantity" id="edit_stock_quantity" required>
+                <div class="form-group">
+                    <label>Số lượng:</label>
+                    <input type="number" name="stock_quantity" id="edit_stock_quantity" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Đã bán:</label>
+                    <input type="number" name="sold_quantity" id="edit_sold_quantity" required>
+                </div>
                 
                 <div class="form-group">
                     <label>Danh mục:</label>
@@ -202,6 +210,7 @@ while ($category = $categories_result->fetch_assoc()) {
             document.getElementById('edit_product_name').value = product.product_name;
             document.getElementById('edit_price').value = product.price;
             document.getElementById('edit_stock_quantity').value = product.stock_quantity;
+            document.getElementById('edit_sold_quantity').value = product.sold_quantity;
             document.getElementById('edit_category_id').value = product.category_id;
             document.getElementById('edit_description').value = product.description;
         }

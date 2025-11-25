@@ -13,11 +13,73 @@ if(isset($_POST['order_id']) && isset($_POST['status'])) {
     $order_id = intval($_POST['order_id']);
     $new_status = trim($_POST['status']);
     
+    // Lấy trạng thái cũ
+    $old_status_sql = "SELECT order_status FROM orders WHERE order_id = ?";
+    $old_status_stmt = $conn->prepare($old_status_sql);
+    $old_status_stmt->bind_param("i", $order_id);
+    $old_status_stmt->execute();
+    $old_status_result = $old_status_stmt->get_result();
+    $old_status = $old_status_result->fetch_assoc()['order_status'];
+    
+    $message = 'Cập nhật trạng thái thành công!';
+    
+    // Lấy chi tiết đơn hàng
+    $details_sql = "SELECT product_id, quantity FROM order_details WHERE order_id = ?";
+    $details_stmt = $conn->prepare($details_sql);
+    $details_stmt->bind_param("i", $order_id);
+    $details_stmt->execute();
+    $details_result = $details_stmt->get_result();
+    
+    // Chuyển sang trạng thái "Hoàn thành" - Trừ tồn kho và tăng đã bán
+    if ($new_status === 'Hoàn thành' && $old_status !== 'Hoàn thành') {
+        $update_stock_sql = "UPDATE products 
+                             SET stock_quantity = stock_quantity - ?, 
+                                 sold_quantity = sold_quantity + ? 
+                             WHERE product_id = ?";
+        $update_stock_stmt = $conn->prepare($update_stock_sql);
+        
+        while ($detail = $details_result->fetch_assoc()) {
+            $update_stock_stmt->bind_param("iis", $detail['quantity'], $detail['quantity'], $detail['product_id']);
+            $update_stock_stmt->execute();
+        }
+        $message .= ' Đã trừ tồn kho và cập nhật số lượng đã bán.';
+    }
+    // Chuyển sang trạng thái "Đã hủy" - Hoàn lại nếu đã trừ trước đó
+    elseif ($new_status === 'Đã hủy' && $old_status === 'Hoàn thành') {
+        // Nếu đơn đã hoàn thành trước đó, hoàn lại tồn kho
+        $restore_stock_sql = "UPDATE products 
+                              SET stock_quantity = stock_quantity + ?, 
+                                  sold_quantity = sold_quantity - ? 
+                              WHERE product_id = ?";
+        $restore_stock_stmt = $conn->prepare($restore_stock_sql);
+        
+        $details_stmt->execute();
+        $details_result = $details_stmt->get_result();
+        
+        while ($detail = $details_result->fetch_assoc()) {
+            $restore_stock_stmt->bind_param("iis", $detail['quantity'], $detail['quantity'], $detail['product_id']);
+            $restore_stock_stmt->execute();
+        }
+        $message .= ' Đã hoàn lại tồn kho.';
+    }
+    // Hủy đơn chưa hoàn thành - Không cần hoàn lại
+    elseif ($new_status === 'Đã hủy') {
+        $message .= ' Đơn hàng chưa giao nên không cần hoàn lại tồn kho.';
+    }
+    
+    // Cập nhật trạng thái đơn hàng
     $stmt = $conn->prepare("UPDATE orders SET order_status = ? WHERE order_id = ?");
     $stmt->bind_param("si", $new_status, $order_id);
     
     if($stmt->execute()) {
-        echo "<script>alert('Cập nhật trạng thái thành công!'); window.location.href='admin_orders.php';</script>";
+        // Nếu chuyển sang "Hoàn thành", lưu ngày hoàn thành
+        if ($new_status === 'Hoàn thành') {
+            $update_completed = $conn->prepare("UPDATE orders SET completed_date = NOW() WHERE order_id = ?");
+            $update_completed->bind_param("i", $order_id);
+            $update_completed->execute();
+        }
+        
+        echo "<script>alert('$message'); window.location.href='admin_orders.php';</script>";
     } else {
         echo "<script>alert('Lỗi khi cập nhật: " . $conn->error . "');</script>";
     }

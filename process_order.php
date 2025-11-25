@@ -74,11 +74,23 @@ try {
     $order_stmt->execute();
     $order_id = $conn->insert_id;
 
-    // Thêm chi tiết đơn hàng
+    // Thêm chi tiết đơn hàng (KHÔNG trừ tồn kho ngay, chờ đơn hoàn thành)
     $detail_sql = "INSERT INTO order_details (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
     $detail_stmt = $conn->prepare($detail_sql);
 
     foreach ($items as $item) {
+        // Kiểm tra tồn kho trước khi đặt hàng
+        $check_stock_sql = "SELECT stock_quantity FROM products WHERE product_id = ?";
+        $check_stock_stmt = $conn->prepare($check_stock_sql);
+        $check_stock_stmt->bind_param("s", $item['product_id']);
+        $check_stock_stmt->execute();
+        $stock_result = $check_stock_stmt->get_result()->fetch_assoc();
+        
+        if ($stock_result['stock_quantity'] < $item['quantity']) {
+            throw new Exception("Sản phẩm '{$item['product_name']}' không đủ số lượng trong kho. Còn {$stock_result['stock_quantity']} sản phẩm.");
+        }
+        
+        // Thêm chi tiết đơn hàng
         $detail_stmt->bind_param("isid", $order_id, $item['product_id'], $item['quantity'], $item['price']);
         $detail_stmt->execute();
     }

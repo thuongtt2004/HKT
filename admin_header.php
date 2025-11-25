@@ -35,6 +35,22 @@
                 </a>
             </li>
             <li>
+                <a href="admin_returns.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin_returns.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-undo"></i> Trả hàng
+                    <?php
+                    // Đếm yêu cầu trả hàng chờ duyệt
+                    $return_pending_query = "SELECT COUNT(*) as count FROM orders WHERE return_request = 1 AND return_status = 'Chờ duyệt'";
+                    $return_pending_result = $conn->query($return_pending_query);
+                    if ($return_pending_result) {
+                        $return_count = $return_pending_result->fetch_assoc()['count'];
+                        if ($return_count > 0): ?>
+                            <span class="admin-badge"><?php echo $return_count; ?></span>
+                        <?php endif;
+                    }
+                    ?>
+                </a>
+            </li>
+            <li>
                 <a href="admin_payment_confirmation.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin_payment_confirmation.php' ? 'active' : ''; ?>">
                     <i class="fas fa-check-circle"></i> Xác nhận thanh toán
                     <?php
