@@ -35,7 +35,7 @@ $user = $user_stmt->get_result()->fetch_assoc();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt Hàng - TTHUONG Store</title>
+    <title>Đặt Hàng - HKT Store</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/dathang.css">
     <link rel="stylesheet" href="css/modal.css">
@@ -582,7 +582,7 @@ $user = $user_stmt->get_result()->fetch_assoc();
             // Nếu chưa có orderId (trước khi đặt hàng), dùng XXXX
             const orderIdStr = orderId ? orderId : 'XXXX';
             const shortName = fullName.split(' ').slice(-2).join(' '); // Lấy 2 từ cuối của tên
-            const content = `TTHUONG ${orderIdStr} ${shortName} ${phone}`;
+            const content = `HKT ${orderIdStr} ${shortName} ${phone}`;
             
             // VietQR deep link format (hoạt động với hầu hết app ngân hàng VN)
             // Format: bankapp://pay?beneficiary=<account>&bank=<bank_code>&amount=<amount>&description=<content>

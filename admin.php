@@ -14,7 +14,7 @@ if(!isset($_SESSION['admin_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Quản Trị - TTHUONG Store</title>
+    <title>Trang Quản Trị - HKT Store</title>
     <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
@@ -23,7 +23,7 @@ if(!isset($_SESSION['admin_id'])) {
         
         <main class="admin-main">
             <div class="header">
-                <h1>Trang Quản Trị - TTHUONG Store</h1>
+                <h1>Trang Quản Trị - HKT Store</h1>
             </div>
             
             <div class="dashboard-stats">

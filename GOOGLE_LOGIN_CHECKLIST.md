@@ -1,4 +1,4 @@
-# 🚀 Checklist Cài Đặt Google Login - TTHUONG Store
+# 🚀 Checklist Cài Đặt Google Login - HKT Store
 
 ## ✅ Các File Đã Được Tạo
 
@@ -25,13 +25,13 @@
 ### BƯỚC 1: Cấu Hình Google Cloud Console ⏰ 10 phút
 
 1. [ ] Truy cập https://console.cloud.google.com/
-2. [ ] Tạo project mới: "TTHUONG Store"
+2. [ ] Tạo project mới: "HKT Store"
 3. [ ] Enable API:
    - [ ] Google+ API
    - [ ] People API (optional, dùng để lấy thông tin chi tiết hơn)
 4. [ ] Cấu hình OAuth Consent Screen:
    - [ ] Chọn External
-   - [ ] Điền App name: "TTHUONG Store"
+   - [ ] Điền App name: "HKT Store"
    - [ ] Điền email support
    - [ ] Thêm scopes: `email`, `profile`, `openid`
    - [ ] Thêm test users: email của bạn

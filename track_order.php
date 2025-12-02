@@ -28,7 +28,7 @@ $return_days_limit = 7;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theo dõi đơn hàng - TTHUONG Store</title>
+    <title>Theo dõi đơn hàng - HKT Store</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/theodoidonhang.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -162,7 +162,7 @@ $return_days_limit = 7;
                                         <i class="fas fa-check-circle"></i> Bạn đã xác nhận hài lòng với đơn hàng này
                                     </p>
                                     <p style="margin:8px 0 0 0;color:#155724;font-size:14px;">
-                                        Cảm ơn bạn đã tin tưởng và mua sắm tại TTHUONG Store!
+                                        Cảm ơn bạn đã tin tưởng và mua sắm tại HKT Store!
                                     </p>
                                 </div>
                             <?php elseif ($days_left > 0): ?>

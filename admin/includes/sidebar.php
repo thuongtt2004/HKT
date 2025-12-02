@@ -1,7 +1,7 @@
 <nav class="admin-sidebar">
     <div class="logo">
-        <img src="../images/logoo.jpg" alt="TTHUONG Store" width="80">
-        <h2>TTHUONG Admin</h2>
+        <img src="../images/logoo.jpg" alt="HKT Store" width="80">
+        <h2>HKT Admin</h2>
     </div>
     
     <ul class="menu">

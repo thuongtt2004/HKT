@@ -112,7 +112,7 @@ if (isset($prev_revenue['total_revenue']) && $prev_revenue['total_revenue'] > 0)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo cáo doanh thu - TTHUONG STORE</title>
+    <title>Báo cáo doanh thu - HKT Store</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/admin_revenue.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

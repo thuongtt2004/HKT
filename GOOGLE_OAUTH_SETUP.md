@@ -5,7 +5,7 @@
 1. Truy cập: https://console.cloud.google.com/
 2. Click vào menu dropdown ở góc trên bên trái (bên cạnh "Google Cloud")
 3. Click "NEW PROJECT"
-4. Nhập tên project (ví dụ: "TTHUONG Store")
+4. Nhập tên project (ví dụ: "HKT Store")
 5. Click "CREATE"
 
 ## Bước 2: Enable Google+ API
@@ -22,7 +22,7 @@
    - Click "CONFIGURE CONSENT SCREEN"
    - Chọn "External" (cho testing)
    - Điền thông tin:
-     * App name: TTHUONG Store
+     * App name: HKT Store
      * User support email: your-email@gmail.com
      * Developer contact: your-email@gmail.com
    - Click "SAVE AND CONTINUE"
@@ -35,7 +35,7 @@
 4. Quay lại "Credentials", click "CREATE CREDENTIALS" > "OAuth client ID"
 5. Chọn "Web application"
 6. Điền thông tin:
-   - Name: TTHUONG Store Web Client
+   - Name: HKT Store Web Client
    - Authorized JavaScript origins:
      * http://localhost
      * http://localhost:80

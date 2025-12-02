@@ -14,14 +14,14 @@ if(isset($_SESSION['admin_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Nhập Admin - TTHUONG Store</title>
+    <title>Đăng Nhập Admin - HKT Store</title>
     <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body class="login-page">
     <div class="login-container">
         <div class="login-box">
             <div class="login-header">
-                <img src="../images/logoo.jpg" alt="TTHUONG Store" width="100">
+                <img src="../images/logoo.jpg" alt="HKT Store" width="100">
                 <h1>Đăng Nhập Admin</h1>
             </div>
 

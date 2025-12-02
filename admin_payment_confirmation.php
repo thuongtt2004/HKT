@@ -320,7 +320,7 @@ $result = $conn->query($sql);
                                 </div>
                                 <div class="info-row">
                                     <span class="info-label">Nội dung CK:</span> 
-                                    <strong>TTHUONG <?php echo $order['order_id']; ?> <?php 
+                                    <strong>HKT <?php echo $order['order_id']; ?> <?php 
                                     $name_parts = explode(' ', $order['full_name']);
                                     echo implode(' ', array_slice($name_parts, -2)); 
                                     ?> <?php echo $order['phone']; ?></strong>

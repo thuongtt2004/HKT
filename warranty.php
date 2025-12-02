@@ -7,7 +7,7 @@ require_once 'config/connect.php'; // Thêm kết nối database nếu cần
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chính sách bảo hành - TTHUONG</title>
+    <title>Chính sách bảo hành - HKT Store</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -50,7 +50,7 @@ require_once 'config/connect.php'; // Thêm kết nối database nếu cần
             <h3>IV. Địa điểm bảo hành</h3>
             <p>Quý khách có thể mang sản phẩm đến bảo hành tại:</p>
             <address>
-                <strong>TTHUONG Store</strong><br>
+                <strong>HKT Store</strong><br>
                 Địa chỉ: Trường Thọ, Cầu Ngang, Trà Vinh<br>
                 Điện thoại: (+84) 392-656-499<br>
                 Email: support@tthuong.com
@@ -69,7 +69,7 @@ require_once 'config/connect.php'; // Thêm kết nối database nếu cần
             <p>Email: support@tthuong.com</p>
             <p>Phone: (+84) 392-656-499</p>
             <p>Address: Trường Thọ, Cầu Ngang, Trà Vinh</p>
-            <p class="copyright">&copy; 2024 TTHUONG Store. All rights reserved.</p>
+            <p class="copyright">&copy; 2024 HKT Store. All rights reserved.</p>
         </section>
     </div>
       <?php include 'footer.php'; ?>

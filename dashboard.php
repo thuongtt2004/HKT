@@ -50,7 +50,7 @@ $recentOrders = $conn->query("
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản trị - TTHUONG STORE</title>
+    <title>Quản trị - HKT Store</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -62,7 +62,7 @@ $recentOrders = $conn->query("
     <main>
         <div class="welcome-section">
             <h2>Xin chào, <?php echo isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Admin'; ?></h2>
-            <p>Chào mừng bạn đến với trang quản trị TTHUONG STORE</p>
+            <p>Chào mừng bạn đến với trang quản trị HKT Store</p>
         </div>
 
         <div class="dashboard-stats">

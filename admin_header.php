@@ -2,7 +2,7 @@
     <div class="admin-header-top">
         <div class="logo-section">
             <img src="./images/logoo.jpg" alt="Logo" class="admin-logo">
-            <h1>TTHUONG Store - Admin</h1>
+            <h1>HKT Store - Admin</h1>
         </div>
         
         <div class="admin-header-actions">

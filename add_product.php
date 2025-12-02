@@ -109,7 +109,7 @@ $categories = $conn->query("SELECT * FROM categories");
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm Sản Phẩm - TTHUONG STORE</title>
+    <title>Thêm Sản Phẩm - HKT Store</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/add_product.css">
 </head>
