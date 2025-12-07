@@ -197,9 +197,10 @@ $return_days_limit = 7;
                         </div>
                     <?php endif; ?>
 
-                    <?php if ($order['order_status'] == 'Đã giao hàng'): ?>
+                    <!-- Đánh giá sản phẩm - chỉ hiện khi đã xác nhận hài lòng -->
+                    <?php if ($order['order_status'] == 'Hoàn thành' && $order['customer_confirmed'] == 1): ?>
                         <div class="review-section">
-                            <h4>Đánh giá sản phẩm</h4>
+                            <h4><i class="fas fa-star"></i> Đánh giá sản phẩm</h4>
                             <?php
                             $detail_sql = "SELECT od.*, p.product_name, p.image_url, r.rating, r.content as review_content
                                           FROM order_details od 
@@ -247,6 +248,16 @@ $return_days_limit = 7;
                             <?php endwhile; ?>
                         </div>
                     <?php endif; ?>
+
+                    <!-- Thông báo cần xác nhận trước khi đánh giá -->
+                    <?php if ($order['order_status'] == 'Hoàn thành' && $order['customer_confirmed'] == 0): ?>
+                        <div style="background:#e3f2fd;border-left:4px solid #2196f3;padding:15px;margin:20px 0;border-radius:8px;">
+                            <p style="margin:0;color:#1565c0;font-size:14px;line-height:1.6;">
+                                <i class="fas fa-info-circle"></i> 
+                                <strong>Lưu ý:</strong> Vui lòng xác nhận đã nhận hàng và hài lòng để có thể đánh giá sản phẩm.
+                            </p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             <?php endwhile; ?>
         <?php else: ?>
@@ -260,33 +271,41 @@ $return_days_limit = 7;
     </div>
 
     <!-- Modal Yêu Cầu Trả Hàng -->
-    <div id="returnModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
-        <div style="background:white;border-radius:12px;padding:30px;max-width:500px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-            <h3 style="margin-bottom:20px;color:#333;"><i class="fas fa-undo"></i> Yêu cầu trả hàng/hoàn tiền</h3>
-            <form id="returnForm">
-                <input type="hidden" id="return_order_id" name="order_id">
-                <div style="margin-bottom:20px;">
-                    <label style="display:block;margin-bottom:8px;font-weight:600;color:#333;">
-                        Lý do trả hàng <span style="color:red;">*</span>
-                    </label>
-                    <textarea name="return_reason" 
-                              style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;min-height:120px;font-family:inherit;"
-                              placeholder="Vui lòng mô tả rõ lý do bạn muốn trả hàng (sản phẩm lỗi, không đúng mô tả, v.v.)"
-                              required></textarea>
+    <div id="returnModal" class="modal" style="display:none !important;">
+        <div class="modal-content" style="max-width:500px !important;background:white !important;border-radius:12px !important;box-shadow:0 10px 40px rgba(0,0,0,0.3) !important;position:relative !important;">
+            <div class="modal-header" style="padding:20px !important;border-bottom:2px solid #667eea !important;background:white !important;">
+                <h3 style="margin:0 !important;color:#333 !important;font-size:1.5rem !important;display:block !important;"><i class="fas fa-undo"></i> Yêu cầu trả hàng/hoàn tiền</h3>
+                <span class="close-modal" onclick="closeReturnModal()" style="position:absolute !important;right:20px !important;top:20px !important;font-size:28px !important;cursor:pointer !important;color:#999 !important;line-height:1 !important;">&times;</span>
+            </div>
+            <form id="returnForm" style="display:block !important;">
+                <div class="modal-body" style="padding:25px !important;display:block !important;background:white !important;">
+                    <input type="hidden" id="return_order_id" name="order_id">
+                    
+                    <div class="form-group" style="margin-bottom:20px !important;display:block !important;">
+                        <label style="display:block !important;margin-bottom:8px !important;font-weight:600 !important;color:#333 !important;font-size:15px !important;">
+                            <i class="fas fa-comment-dots"></i> Lý do trả hàng <span style="color:red !important;">*</span>
+                        </label>
+                        <textarea name="return_reason" 
+                                  style="width:100% !important;padding:12px !important;border:2px solid #ddd !important;border-radius:8px !important;min-height:120px !important;font-family:inherit !important;font-size:14px !important;resize:vertical !important;display:block !important;box-sizing:border-box !important;"
+                                  placeholder="Vui lòng mô tả rõ lý do bạn muốn trả hàng (sản phẩm lỗi, không đúng mô tả, v.v.)"
+                                  required></textarea>
+                    </div>
+                    
+                    <div style="background:#fff3cd !important;border-left:4px solid #ffc107 !important;padding:15px !important;margin:20px 0 !important;border-radius:8px !important;display:block !important;">
+                        <p style="margin:0 !important;color:#856404 !important;font-size:14px !important;line-height:1.6 !important;display:block !important;">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Lưu ý:</strong> Chúng tôi sẽ xem xét yêu cầu trong vòng 24-48h và liên hệ lại với bạn qua email/số điện thoại đã đăng ký.
+                        </p>
+                    </div>
                 </div>
-                <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:12px;margin-bottom:20px;border-radius:8px;">
-                    <p style="margin:0;color:#856404;font-size:14px;">
-                        <i class="fas fa-info-circle"></i> 
-                        Chúng tôi sẽ xem xét yêu cầu trong vòng 24-48h và liên hệ lại với bạn
-                    </p>
-                </div>
-                <div style="display:flex;gap:10px;justify-content:flex-end;">
-                    <button type="button" onclick="closeReturnModal()" 
-                            style="padding:12px 24px;background:#6c757d;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
-                        Hủy
+                
+                <div class="modal-footer" style="padding:20px !important;border-top:1px solid #ddd !important;display:flex !important;gap:10px !important;justify-content:flex-end !important;background:white !important;">
+                    <button type="button" onclick="closeReturnModal()" class="btn-cancel" 
+                            style="padding:12px 24px !important;background:#6c757d !important;color:white !important;border:none !important;border-radius:8px !important;cursor:pointer !important;font-weight:600 !important;font-size:15px !important;">
+                        <i class="fas fa-times"></i> Hủy
                     </button>
-                    <button type="submit" 
-                            style="padding:12px 24px;background:#dc3545;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
+                    <button type="submit" class="btn-confirm" 
+                            style="padding:12px 24px !important;background:#dc3545 !important;color:white !important;border:none !important;border-radius:8px !important;cursor:pointer !important;font-weight:600 !important;font-size:15px !important;">
                         <i class="fas fa-paper-plane"></i> Gửi yêu cầu
                     </button>
                 </div>
@@ -319,13 +338,17 @@ $return_days_limit = 7;
         // Mở modal yêu cầu trả hàng
         function openReturnModal(orderId) {
             document.getElementById('return_order_id').value = orderId;
-            document.getElementById('returnModal').style.display = 'flex';
+            const modal = document.getElementById('returnModal');
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
 
         // Đóng modal
         function closeReturnModal() {
-            document.getElementById('returnModal').style.display = 'none';
+            const modal = document.getElementById('returnModal');
+            modal.style.display = 'none';
             document.getElementById('returnForm').reset();
+            document.body.style.overflow = 'auto';
         }
 
         // Xử lý submit form trả hàng

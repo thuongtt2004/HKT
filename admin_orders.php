@@ -21,6 +21,32 @@ if(isset($_POST['order_id']) && isset($_POST['status'])) {
     $old_status_result = $old_status_stmt->get_result();
     $old_status = $old_status_result->fetch_assoc()['order_status'];
     
+    // LOGIC KIỂM TRA: Không cho phép thay đổi trạng thái Đã hủy hoặc Hoàn thành
+    if ($old_status === 'Đã hủy') {
+        echo "<script>alert('Không thể thay đổi trạng thái đơn hàng đã hủy!'); window.location.href='admin_orders.php';</script>";
+        exit();
+    }
+    
+    if ($old_status === 'Hoàn thành' && $new_status !== 'Hoàn thành') {
+        echo "<script>alert('Không thể thay đổi trạng thái đơn hàng đã hoàn thành!'); window.location.href='admin_orders.php';</script>";
+        exit();
+    }
+    
+    // Kiểm tra logic chuyển trạng thái hợp lý
+    $valid_transitions = [
+        'Chờ thanh toán' => ['Đã xác nhận', 'Đã hủy'],
+        'Chờ xác nhận' => ['Đã xác nhận', 'Đã hủy'],
+        'Đã xác nhận' => ['Đang giao', 'Đã hủy'],
+        'Đang giao' => ['Hoàn thành', 'Đã hủy'],
+        'Hoàn thành' => ['Hoàn thành'],
+        'Đã hủy' => ['Đã hủy']
+    ];
+    
+    if (!in_array($new_status, $valid_transitions[$old_status])) {
+        echo "<script>alert('Không thể chuyển từ trạng thái \"$old_status\" sang \"$new_status\"!'); window.location.href='admin_orders.php';</script>";
+        exit();
+    }
+    
     $message = 'Cập nhật trạng thái thành công!';
     
     // Lấy chi tiết đơn hàng
@@ -140,20 +166,38 @@ $result = $conn->query($sql);
                         </td>
                         <td><?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?></td>
                         <td>
-                            <form method="POST" action="" style="display: flex; align-items: center; gap: 5px;">
-                                <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
-                                <select name="status" class="status-select">
-                                    <option value="Chờ thanh toán" <?php if($order['order_status'] == 'Chờ thanh toán') echo 'selected'; ?>>Chờ thanh toán</option>
-                                    <option value="Chờ xác nhận" <?php if($order['order_status'] == 'Chờ xác nhận') echo 'selected'; ?>>Chờ xác nhận</option>
-                                    <option value="Đã xác nhận" <?php if($order['order_status'] == 'Đã xác nhận') echo 'selected'; ?>>Đã xác nhận</option>
-                                    <option value="Đang giao" <?php if($order['order_status'] == 'Đang giao') echo 'selected'; ?>>Đang giao</option>
-                                    <option value="Hoàn thành" <?php if($order['order_status'] == 'Hoàn thành') echo 'selected'; ?>>Hoàn thành</option>
-                                    <option value="Đã hủy" <?php if($order['order_status'] == 'Đã hủy') echo 'selected'; ?>>Đã hủy</option>
-                                </select>
-                                <button type="submit" class="btn-update-status">
-                                    <i class="fas fa-save"></i> Lưu
-                                </button>
-                            </form>
+                            <?php if ($order['order_status'] === 'Đã hủy' || $order['order_status'] === 'Hoàn thành'): ?>
+                                <!-- Không cho phép sửa nếu đã hủy hoặc hoàn thành -->
+                                <span style="padding:8px 12px;background:<?php echo $order['order_status'] === 'Đã hủy' ? '#dc3545' : '#28a745'; ?>;color:white;border-radius:6px;font-weight:600;display:inline-block;">
+                                    <?php echo $order['order_status']; ?>
+                                    <i class="fas fa-lock" style="margin-left:5px;"></i>
+                                </span>
+                            <?php else: ?>
+                                <!-- Cho phép sửa với các trạng thái hợp lệ -->
+                                <form method="POST" action="" style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
+                                    <select name="status" class="status-select" style="padding:8px;border:2px solid #ddd;border-radius:6px;">
+                                        <?php
+                                        $current = $order['order_status'];
+                                        // Chỉ hiển thị các trạng thái hợp lệ có thể chuyển đến
+                                        $valid_next = [
+                                            'Chờ thanh toán' => ['Chờ thanh toán', 'Đã xác nhận', 'Đã hủy'],
+                                            'Chờ xác nhận' => ['Chờ xác nhận', 'Đã xác nhận', 'Đã hủy'],
+                                            'Đã xác nhận' => ['Đã xác nhận', 'Đang giao', 'Đã hủy'],
+                                            'Đang giao' => ['Đang giao', 'Hoàn thành', 'Đã hủy']
+                                        ];
+                                        
+                                        foreach ($valid_next[$current] as $status) {
+                                            $selected = ($status === $current) ? 'selected' : '';
+                                            echo "<option value='$status' $selected>$status</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                    <button type="submit" class="btn-update-status" style="padding:8px 15px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
+                                        <i class="fas fa-save"></i> Lưu
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <span class="view-details" onclick="toggleDetails(<?php echo $order['order_id']; ?>)">
