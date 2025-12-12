@@ -44,7 +44,7 @@ $return_days_limit = 7;
                 <div class="order-card">
                     <div class="order-header">
                         <div>
-                            <h3>Don hàng #<?php echo $order['order_id']; ?></h3>
+                            <h3>Đơn hàng #<?php echo $order['order_id']; ?></h3>
                             <p>Ngày đặt: <?php echo date('d/m/Y H:i', strtotime($order['order_date'])); ?></p>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
@@ -126,13 +126,41 @@ $return_days_limit = 7;
                         </div>
                     </div>
 
-                    <?php if ($order['order_status'] == 'Hoàn thành'): 
+                    <?php if ($order['order_status'] == 'Đã giao hàng'): ?>
+                        <!-- Trạng thái "Đã giao hàng" - hiển thị nút xác nhận -->
+                        <div class="order-actions" style="background:#f8f9fa;padding:20px;margin-top:15px;border-radius:8px;">
+                            <h4 style="margin-bottom:15px;color:#333;"><i class="fas fa-tasks"></i> Xác nhận đơn hàng</h4>
+                            
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                <button onclick="confirmDelivery(<?php echo $order['order_id']; ?>)" 
+                                        class="btn-confirm-delivery" 
+                                        style="flex:1;min-width:200px;padding:12px 20px;background:#28a745;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.3s;">
+                                    <i class="fas fa-check-circle"></i> Xác nhận hài lòng
+                                </button>
+                                <button onclick="openReturnModal(<?php echo $order['order_id']; ?>)" 
+                                        class="btn-request-return" 
+                                        style="flex:1;min-width:200px;padding:12px 20px;background:#dc3545;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.3s;">
+                                    <i class="fas fa-undo"></i> Yêu cầu trả hàng
+                                </button>
+                            </div>
+                            
+                            <p style="margin:10px 0 0 0;color:#666;font-size:13px;">
+                                <i class="fas fa-info-circle"></i> 
+                                Vui lòng xác nhận sau khi kiểm tra sản phẩm
+                            </p>
+                        </div>
+                    <?php elseif ($order['order_status'] == 'Hoàn thành'): 
                         $completed_date = (isset($order['completed_date']) && $order['completed_date']) ? strtotime($order['completed_date']) : time();
                         $days_passed = floor((time() - $completed_date) / 86400);
                         $days_left = $return_days_limit - $days_passed;
                         $customer_confirmed = $order['customer_confirmed'] ?? 0;
                         $return_request = $order['return_request'] ?? 0;
                         $return_status = $order['return_status'] ?? '';
+                        
+                        // Nếu đơn hàng "Hoàn thành" mà không có customer_confirmed, coi như đã xác nhận (đơn hàng cũ)
+                        if ($customer_confirmed == 0 && $order['order_status'] == 'Hoàn thành') {
+                            $customer_confirmed = 1; // Coi như đã xác nhận cho đơn hàng cũ
+                        }
                     ?>
                         <div class="order-actions" style="background:#f8f9fa;padding:20px;margin-top:15px;border-radius:8px;">
                             <h4 style="margin-bottom:15px;color:#333;"><i class="fas fa-tasks"></i> Thao tác với đơn hàng</h4>
@@ -198,7 +226,7 @@ $return_days_limit = 7;
                     <?php endif; ?>
 
                     <!-- Đánh giá sản phẩm - chỉ hiện khi đã xác nhận hài lòng -->
-                    <?php if ($order['order_status'] == 'Hoàn thành' && $order['customer_confirmed'] == 1): ?>
+                    <?php if ($order['order_status'] == 'Hoàn thành' && (isset($customer_confirmed) ? $customer_confirmed : $order['customer_confirmed']) == 1): ?>
                         <div class="review-section">
                             <h4><i class="fas fa-star"></i> Đánh giá sản phẩm</h4>
                             <?php
@@ -250,7 +278,7 @@ $return_days_limit = 7;
                     <?php endif; ?>
 
                     <!-- Thông báo cần xác nhận trước khi đánh giá -->
-                    <?php if ($order['order_status'] == 'Hoàn thành' && $order['customer_confirmed'] == 0): ?>
+                    <?php if ($order['order_status'] == 'Hoàn thành' && (isset($customer_confirmed) ? $customer_confirmed : $order['customer_confirmed']) == 0): ?>
                         <div style="background:#e3f2fd;border-left:4px solid #2196f3;padding:15px;margin:20px 0;border-radius:8px;">
                             <p style="margin:0;color:#1565c0;font-size:14px;line-height:1.6;">
                                 <i class="fas fa-info-circle"></i> 

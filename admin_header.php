@@ -1,7 +1,7 @@
 <header class="admin-header">
     <div class="admin-header-top">
         <div class="logo-section">
-            <img src="./images/logoo.jpg" alt="Logo" class="admin-logo">
+            <img src="./images/logo.jpeg" alt="Logo" class="admin-logo">
             <h1>HKT Store - Admin</h1>
         </div>
         
@@ -27,6 +27,11 @@
             <li>
                 <a href="admin_products.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin_products.php' ? 'active' : ''; ?>">
                     <i class="fas fa-box"></i> Sản phẩm
+                </a>
+            </li>
+            <li>
+                <a href="admin_categories.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin_categories.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-list"></i> Danh mục
                 </a>
             </li>
             <li>
@@ -108,7 +113,7 @@
             </li>
             <li>
                 <a href="admin_log.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin_log.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-list"></i> Lịch sử
+                    <i class="fas fa-history"></i> Lịch sử
                 </a>
             </li>
         </ul>

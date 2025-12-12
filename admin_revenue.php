@@ -37,11 +37,31 @@ $stmt->bind_param("ii", $current_year, $current_month);
 $stmt->execute();
 $current_revenue = $stmt->get_result()->fetch_assoc();
 
+// Kiểm tra nếu không có dữ liệu tháng hiện tại
+if (!$current_revenue) {
+    $current_revenue = [
+        'month' => date('Y-m'),
+        'total_orders' => 0,
+        'total_revenue' => 0,
+        'avg_order_value' => 0
+    ];
+}
+
 // Doanh thu tháng trước
 $stmt = $conn->prepare($revenue_query);
 $stmt->bind_param("ii", $prev_year, $prev_month);
 $stmt->execute();
 $prev_revenue = $stmt->get_result()->fetch_assoc();
+
+// Kiểm tra nếu không có dữ liệu tháng trước
+if (!$prev_revenue) {
+    $prev_revenue = [
+        'month' => sprintf('%04d-%02d', $prev_year, $prev_month),
+        'total_orders' => 0,
+        'total_revenue' => 0,
+        'avg_order_value' => 0
+    ];
+}
 
 // Doanh thu theo ngày trong tháng được chọn
 $daily_query = "

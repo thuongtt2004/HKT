@@ -9,8 +9,12 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Lấy danh sách sản phẩm đã mua thành công
-$sql = "SELECT DISTINCT p.*, od.order_id, o.order_date, o.order_status
+// Lấy danh sách sản phẩm đã mua thành công - gộp sản phẩm giống nhau
+$sql = "SELECT p.*, 
+               GROUP_CONCAT(DISTINCT od.order_id ORDER BY o.order_date DESC) as order_ids,
+               GROUP_CONCAT(DISTINCT DATE_FORMAT(o.order_date, '%d/%m/%Y') ORDER BY o.order_date DESC) as order_dates,
+               COUNT(DISTINCT od.order_id) as order_count,
+               SUM(od.quantity) as total_quantity
         FROM products p
         JOIN order_details od ON p.product_id = od.product_id
         JOIN orders o ON od.order_id = o.order_id
@@ -18,7 +22,8 @@ $sql = "SELECT DISTINCT p.*, od.order_id, o.order_date, o.order_status
         AND NOT EXISTS (
             SELECT 1 FROM reviews r 
             WHERE r.user_id = ? AND r.product_id = p.product_id
-        )";
+        )
+        GROUP BY p.product_id";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ii", $user_id, $user_id);
@@ -64,10 +69,17 @@ $reviews = $reviews_stmt->get_result();
                              alt="<?php echo htmlspecialchars($product['product_name']); ?>">
                         <div class="product-info">
                             <h4><?php echo htmlspecialchars($product['product_name']); ?></h4>
-                            <p>Đơn hàng #<?php echo $product['order_id']; ?></p>
-                            <p>Ngày mua: <?php echo date('d/m/Y', strtotime($product['order_date'])); ?></p>
+                            <?php if ($product['order_count'] > 1): ?>
+                                <p><strong><?php echo $product['order_count']; ?> đơn hàng</strong> - Tổng <?php echo $product['total_quantity']; ?> sản phẩm</p>
+                                <p>Đơn hàng: #<?php echo str_replace(',', ', #', $product['order_ids']); ?></p>
+                                <p>Ngày mua: <?php echo str_replace(',', ', ', $product['order_dates']); ?></p>
+                            <?php else: ?>
+                                <p>Đơn hàng #<?php echo $product['order_ids']; ?></p>
+                                <p>Ngày mua: <?php echo $product['order_dates']; ?></p>
+                                <p>Số lượng: <?php echo $product['total_quantity']; ?></p>
+                            <?php endif; ?>
                             
-                            <button type="button" class="btn-review" onclick="openReviewModal(<?php echo $product['product_id']; ?>, <?php echo $product['order_id']; ?>, '<?php echo htmlspecialchars($product['product_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($product['image_url'], ENT_QUOTES); ?>')">
+                            <button type="button" class="btn-review" onclick="openReviewModal(<?php echo $product['product_id']; ?>, '<?php echo $product['order_ids']; ?>', '<?php echo htmlspecialchars($product['product_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($product['image_url'], ENT_QUOTES); ?>')">
                                 <i class="fas fa-star"></i> Đánh giá ngay
                             </button>
                         </div>
@@ -166,15 +178,22 @@ $reviews = $reviews_stmt->get_result();
     let currentProductId = null;
     let currentOrderId = null;
 
-    function openReviewModal(productId, orderId, productName, productImage) {
+    function openReviewModal(productId, orderIds, productName, productImage) {
         currentProductId = productId;
-        currentOrderId = orderId;
+        currentOrderId = orderIds.split(',')[0]; // Lấy đơn hàng đầu tiên
         
         document.getElementById('modalProductImage').src = productImage;
         document.getElementById('modalProductName').textContent = productName;
-        document.getElementById('modalOrderId').textContent = 'Đơn hàng #' + orderId;
+        
+        // Hiển thị thông tin đơn hàng
+        if (orderIds.includes(',')) {
+            document.getElementById('modalOrderId').textContent = 'Từ nhiều đơn hàng: #' + orderIds.replace(/,/g, ', #');
+        } else {
+            document.getElementById('modalOrderId').textContent = 'Đơn hàng #' + orderIds;
+        }
+        
         document.getElementById('reviewProductId').value = productId;
-        document.getElementById('reviewOrderId').value = orderId;
+        document.getElementById('reviewOrderId').value = currentOrderId;
         document.getElementById('reviewModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
