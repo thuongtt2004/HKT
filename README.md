@@ -222,7 +222,11 @@ Dự án này được phát hành dưới giấy phép [MIT License](LICENSE).
 
 **Thương Trần**
 - GitHub: [@thuongtt2004](https://github.com/thuongtt2004)
+<<<<<<< HEAD
 - Email: dubu2k4@gmail.com
+=======
+- Email: thuongtt2004@gmail.com
+>>>>>>> 5b6c79f956c234f0c9739d0a27a4b64789cb30e3
 
 ---
 
@@ -238,6 +242,10 @@ Dự án này được phát hành dưới giấy phép [MIT License](LICENSE).
   
 ### ⭐ Nếu thấy dự án hữu ích, hãy cho một ngôi sao nhé! ⭐
 
+<<<<<<< HEAD
 **Made with ❤️ by dubu2k4**
+=======
+**Made with ❤️ by Thương Trần**
+>>>>>>> 5b6c79f956c234f0c9739d0a27a4b64789cb30e3
 
 </div>
