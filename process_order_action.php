@@ -73,12 +73,13 @@ try {
             throw new Exception('Vui lòng nhập lý do trả hàng');
         }
         
-        // Lưu yêu cầu trả hàng
+        // Lưu yêu cầu trả hàng và cập nhật order_status
         $update_sql = "UPDATE orders 
                        SET return_request = 1, 
                            return_reason = ?, 
                            return_request_date = NOW(),
-                           return_status = 'Chờ duyệt'
+                           return_status = 'Chờ duyệt',
+                           order_status = 'Chờ xác nhận trả hàng'
                        WHERE order_id = ?";
         $update_stmt = $conn->prepare($update_sql);
         $update_stmt->bind_param("si", $return_reason, $order_id);

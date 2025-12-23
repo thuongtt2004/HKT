@@ -21,26 +21,39 @@ if(isset($_POST['order_id']) && isset($_POST['status'])) {
     $old_status_result = $old_status_stmt->get_result();
     $old_status = $old_status_result->fetch_assoc()['order_status'];
     
-    // LOGIC KIỂM TRA: Không cho phép thay đổi trạng thái Đã hủy và Hoàn thành
+    // LOGIC KIỂM TRA: Không cho phép thay đổi trạng thái Đã hủy hoặc Hoàn thành
     if ($old_status === 'Đã hủy') {
         echo "<script>alert('Không thể thay đổi trạng thái đơn hàng đã hủy!'); window.location.href='admin_orders.php';</script>";
         exit();
     }
     
-    if ($old_status === 'Hoàn thành') {
+    if ($old_status === 'Hoàn thành' && $new_status !== 'Hoàn thành') {
         echo "<script>alert('Không thể thay đổi trạng thái đơn hàng đã hoàn thành!'); window.location.href='admin_orders.php';</script>";
         exit();
     }
     
-    // Kiểm tra logic chuyển trạng thái hợp lý - Admin chỉ set tới "Đã giao hàng"
+    // KHÓA CÁC TRẠNG THÁI TRẢ HÀNG
+    if ($old_status === 'Đã duyệt trả hàng') {
+        echo "<script>alert('Không thể thay đổi trạng thái đơn hàng đã duyệt trả hàng!'); window.location.href='admin_orders.php';</script>";
+        exit();
+    }
+    
+    if ($old_status === 'Không đồng ý duyệt trả hàng') {
+        echo "<script>alert('Không thể thay đổi trạng thái đơn hàng không đồng ý duyệt trả hàng!'); window.location.href='admin_orders.php';</script>";
+        exit();
+    }
+    
+    // Kiểm tra logic chuyển trạng thái hợp lý
     $valid_transitions = [
-        'Chờ thanh toán' => ['Chờ thanh toán', 'Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Đã giao hàng', 'Đã hủy'],
-        'Chờ xác nhận' => ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Đã giao hàng', 'Đã hủy'],
-        'Đã xác nhận' => ['Đã xác nhận', 'Đang giao hàng', 'Đã giao hàng', 'Đã hủy'],
-        'Đang giao hàng' => ['Đang giao hàng', 'Đã giao hàng', 'Đã hủy'],
-        'Đã giao hàng' => ['Đã giao hàng'], // Chỉ giữ nguyên, khách hàng sẽ tick để chuyển thành Hoàn thành
-        'Hoàn thành' => ['Hoàn thành'], // Khóa cứng
-        'Đã hủy' => ['Đã hủy'] // Khóa cứng
+        'Chờ thanh toán' => ['Đã xác nhận', 'Đã hủy'],
+        'Chờ xác nhận' => ['Đã xác nhận', 'Đã hủy'],
+        'Đã xác nhận' => ['Đang giao', 'Đã hủy'],
+        'Đang giao' => ['Hoàn thành', 'Đã hủy'],
+        'Hoàn thành' => ['Hoàn thành'],
+        'Đã hủy' => ['Đã hủy'],
+        'Chờ xác nhận trả hàng' => ['Chờ xác nhận trả hàng'], // Không được thay đổi từ đây, chỉ admin_returns.php mới thay đổi được
+        'Đã duyệt trả hàng' => ['Đã duyệt trả hàng'], // Khóa
+        'Không đồng ý duyệt trả hàng' => ['Không đồng ý duyệt trả hàng'] // Khóa
     ];
     
     if (!in_array($new_status, $valid_transitions[$old_status])) {
@@ -57,13 +70,8 @@ if(isset($_POST['order_id']) && isset($_POST['status'])) {
     $details_stmt->execute();
     $details_result = $details_stmt->get_result();
     
-    // Xử lý tồn kho dựa trên trạng thái
-    $stock_affecting_statuses = ['Đã giao hàng', 'Hoàn thành'];
-    $old_affects_stock = in_array($old_status, $stock_affecting_statuses);
-    $new_affects_stock = in_array($new_status, $stock_affecting_statuses);
-    
-    // Chuyển sang trạng thái ảnh hưởng tồn kho (Đã giao hàng hoặc Hoàn thành)
-    if ($new_affects_stock && !$old_affects_stock) {
+    // Chuyển sang trạng thái "Hoàn thành" - Trừ tồn kho và tăng đã bán
+    if ($new_status === 'Hoàn thành' && $old_status !== 'Hoàn thành') {
         $update_stock_sql = "UPDATE products 
                              SET stock_quantity = stock_quantity - ?, 
                                  sold_quantity = sold_quantity + ? 
@@ -76,8 +84,9 @@ if(isset($_POST['order_id']) && isset($_POST['status'])) {
         }
         $message .= ' Đã trừ tồn kho và cập nhật số lượng đã bán.';
     }
-    // Chuyển từ trạng thái ảnh hưởng tồn kho về trạng thái không ảnh hưởng
-    elseif (!$new_affects_stock && $old_affects_stock) {
+    // Chuyển sang trạng thái "Đã hủy" - Hoàn lại nếu đã trừ trước đó
+    elseif ($new_status === 'Đã hủy' && $old_status === 'Hoàn thành') {
+        // Nếu đơn đã hoàn thành trước đó, hoàn lại tồn kho
         $restore_stock_sql = "UPDATE products 
                               SET stock_quantity = stock_quantity + ?, 
                                   sold_quantity = sold_quantity - ? 
@@ -93,27 +102,9 @@ if(isset($_POST['order_id']) && isset($_POST['status'])) {
         }
         $message .= ' Đã hoàn lại tồn kho.';
     }
-    // Chuyển sang trạng thái "Đã hủy"
+    // Hủy đơn chưa hoàn thành - Không cần hoàn lại
     elseif ($new_status === 'Đã hủy') {
-        if ($old_affects_stock) {
-            // Hoàn lại tồn kho nếu trước đó đã trừ
-            $restore_stock_sql = "UPDATE products 
-                                  SET stock_quantity = stock_quantity + ?, 
-                                      sold_quantity = sold_quantity - ? 
-                                  WHERE product_id = ?";
-            $restore_stock_stmt = $conn->prepare($restore_stock_sql);
-            
-            $details_stmt->execute();
-            $details_result = $details_stmt->get_result();
-            
-            while ($detail = $details_result->fetch_assoc()) {
-                $restore_stock_stmt->bind_param("iis", $detail['quantity'], $detail['quantity'], $detail['product_id']);
-                $restore_stock_stmt->execute();
-            }
-            $message .= ' Đã hoàn lại tồn kho do hủy đơn.';
-        } else {
-            $message .= ' Đơn hàng chưa giao nên không cần hoàn lại tồn kho.';
-        }
+        $message .= ' Đơn hàng chưa giao nên không cần hoàn lại tồn kho.';
     }
     
     // Cập nhật trạng thái đơn hàng
@@ -121,8 +112,8 @@ if(isset($_POST['order_id']) && isset($_POST['status'])) {
     $stmt->bind_param("si", $new_status, $order_id);
     
     if($stmt->execute()) {
-        // Nếu chuyển sang "Đã giao hàng" hoặc "Hoàn thành", lưu ngày hoàn thành
-        if (in_array($new_status, ['Đã giao hàng', 'Hoàn thành']) && !in_array($old_status, ['Đã giao hàng', 'Hoàn thành'])) {
+        // Nếu chuyển sang "Hoàn thành", lưu ngày hoàn thành
+        if ($new_status === 'Hoàn thành') {
             $update_completed = $conn->prepare("UPDATE orders SET completed_date = NOW() WHERE order_id = ?");
             $update_completed->bind_param("i", $order_id);
             $update_completed->execute();
@@ -150,57 +141,6 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="css/admin_orders.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        .status-select {
-            padding: 8px 12px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            min-width: 150px;
-            font-weight: 600;
-            background: white;
-            color: #333;
-        }
-        
-        .btn-update-status:hover {
-            background: #5a67d8 !important;
-            transform: translateY(-1px);
-        }
-        
-        .order-table td form {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .locked-status {
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            display: inline-block;
-            color: white;
-        }
-        
-        .status-completed {
-            background: #28a745;
-        }
-        
-        .status-cancelled {
-            background: #dc3545;
-        }
-        
-        @media (max-width: 768px) {
-            .order-table td form {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            .status-select {
-                min-width: 120px;
-                font-size: 12px;
-            }
-        }
-    </style>
 </head>
 <body>
     <?php include 'admin_header.php'; ?>
@@ -240,32 +180,41 @@ $result = $conn->query($sql);
                         </td>
                         <td><?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?></td>
                         <td>
-                            <?php if ($order['order_status'] === 'Đã hủy' || $order['order_status'] === 'Hoàn thành'): ?>
-                                <!-- Khóa trạng thái "Đã hủy" và "Hoàn thành" -->
-                                <span class="locked-status <?php echo $order['order_status'] === 'Đã hủy' ? 'status-cancelled' : 'status-completed'; ?>">
+                            <?php 
+                            $locked_statuses = ['Đã hủy', 'Hoàn thành', 'Đã duyệt trả hàng', 'Không đồng ý duyệt trả hàng'];
+                            if (in_array($order['order_status'], $locked_statuses)): 
+                                // Hiển thị màu tương ứng cho từng trạng thái
+                                $bg_color = '#28a745'; // Mặc định xanh lá
+                                if ($order['order_status'] === 'Đã hủy') $bg_color = '#dc3545';
+                                elseif ($order['order_status'] === 'Không đồng ý duyệt trả hàng') $bg_color = '#dc3545';
+                                elseif ($order['order_status'] === 'Đã duyệt trả hàng') $bg_color = '#17a2b8';
+                            ?>
+                                <!-- Không cho phép sửa nếu đã khóa -->
+                                <span style="padding:8px 12px;background:<?php echo $bg_color; ?>;color:white;border-radius:6px;font-weight:600;display:inline-block;">
                                     <?php echo $order['order_status']; ?>
                                     <i class="fas fa-lock" style="margin-left:5px;"></i>
                                 </span>
+                            <?php elseif ($order['order_status'] === 'Chờ xác nhận trả hàng'): ?>
+                                <!-- Trạng thái chờ xác nhận trả hàng - chỉ xử lý ở admin_returns.php -->
+                                <span style="padding:8px 12px;background:#ffc107;color:#000;border-radius:6px;font-weight:600;display:inline-block;">
+                                    <?php echo $order['order_status']; ?>
+                                    <i class="fas fa-exclamation-triangle" style="margin-left:5px;"></i>
+                                </span>
                             <?php else: ?>
-                                <!-- Cho phép sửa các trạng thái khác -->
+                                <!-- Cho phép sửa với các trạng thái hợp lệ -->
                                 <form method="POST" action="" style="display: flex; align-items: center; gap: 5px;">
                                     <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
-                                    <select name="status" class="status-select" style="padding:8px;border:2px solid #ddd;border-radius:6px;min-width:150px;">
+                                    <select name="status" class="status-select" style="padding:8px;border:2px solid #ddd;border-radius:6px;">
                                         <?php
                                         $current = $order['order_status'];
-                                        // Admin chỉ có thể set tới "Đã giao hàng"
+                                        // Chỉ hiển thị các trạng thái hợp lệ có thể chuyển đến
                                         $valid_next = [
-                                            'Chờ thanh toán' => ['Chờ thanh toán', 'Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Đã giao hàng', 'Đã hủy'],
-                                            'Chờ xác nhận' => ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Đã giao hàng', 'Đã hủy'],
-                                            'Đã xác nhận' => ['Đã xác nhận', 'Đang giao hàng', 'Đã giao hàng', 'Đã hủy'],
-                                            'Đang giao hàng' => ['Đang giao hàng', 'Đã giao hàng', 'Đã hủy'],
-                                            'Đã giao hàng' => ['Đã giao hàng'] // Chỉ giữ nguyên
+                                            'Chờ thanh toán' => ['Chờ thanh toán', 'Đã xác nhận', 'Đã hủy'],
+                                            'Chờ xác nhận' => ['Chờ xác nhận', 'Đã xác nhận', 'Đã hủy'],
+                                            'Đã xác nhận' => ['Đã xác nhận', 'Đang giao', 'Đã hủy'],
+                                            'Đang giao' => ['Đang giao', 'Hoàn thành', 'Đã hủy'],
+                                            'Chờ xác nhận trả hàng' => ['Chờ xác nhận trả hàng'] // Chỉ hiển thị, không cho thay đổi
                                         ];
-                                        
-                                        // Nếu trạng thái hiện tại không có trong danh sách, thêm các trạng thái cơ bản
-                                        if (!isset($valid_next[$current])) {
-                                            $valid_next[$current] = ['Chờ thanh toán', 'Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Đã giao hàng', 'Đã hủy'];
-                                        }
                                         
                                         foreach ($valid_next[$current] as $status) {
                                             $selected = ($status === $current) ? 'selected' : '';

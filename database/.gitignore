@@ -1,0 +1,8 @@
+# Không ignore file SQL backup chính
+!tthuong_store*.sql
+
+# Không ignore thư mục migrations
+!migrations/
+!migrations/*.sql
+!migrations/applied/
+!migrations/applied/*.sql

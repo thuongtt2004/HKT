@@ -43,3 +43,9 @@ sessions/
 # Cache
 cache/
 *.cache
+
+# Database migrations - TRACK LẠI để team member biết lịch sử thay đổi
+!database/migrations/
+!database/migrations/*.sql
+!database/migrations/applied/
+!database/migrations/applied/*.sql

@@ -39,7 +39,7 @@ if (isset($_POST['process_return'])) {
             }
             
             // Cập nhật trạng thái yêu cầu
-            $update_sql = "UPDATE orders SET return_status = 'Đã duyệt', order_status = 'Đã trả hàng' WHERE order_id = ?";
+            $update_sql = "UPDATE orders SET return_status = 'Đã duyệt', order_status = 'Đã duyệt trả hàng' WHERE order_id = ?";
             $update_stmt = $conn->prepare($update_sql);
             $update_stmt->bind_param("i", $order_id);
             $update_stmt->execute();
@@ -53,7 +53,7 @@ if (isset($_POST['process_return'])) {
         
     } elseif ($action === 'reject') {
         // Từ chối trả hàng
-        $update_sql = "UPDATE orders SET return_status = 'Từ chối' WHERE order_id = ?";
+        $update_sql = "UPDATE orders SET return_status = 'Từ chối', order_status = 'Không đồng ý duyệt trả hàng' WHERE order_id = ?";
         $update_stmt = $conn->prepare($update_sql);
         $update_stmt->bind_param("i", $order_id);
         
@@ -118,12 +118,27 @@ $return_result = $conn->query($return_sql);
             color: #856404;
         }
         
+        .status-chờ-xác-nhận-trả-hàng {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
         .status-approved {
             background: #d4edda;
             color: #155724;
         }
         
+        .status-đã-duyệt-trả-hàng {
+            background: #d4edda;
+            color: #155724;
+        }
+        
         .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-không-đồng-ý-duyệt-trả-hàng {
             background: #f8d7da;
             color: #721c24;
         }
@@ -201,12 +216,9 @@ $return_result = $conn->query($return_sql);
 
             <?php if ($return_result->num_rows > 0): ?>
                 <?php while ($request = $return_result->fetch_assoc()): 
-                    $status_class = '';
-                    switch($request['return_status']) {
-                        case 'Chờ duyệt': $status_class = 'pending'; break;
-                        case 'Đã duyệt': $status_class = 'approved'; break;
-                        case 'Từ chối': $status_class = 'rejected'; break;
-                    }
+                    // Lấy trạng thái từ order_status
+                    $display_status = $request['order_status'];
+                    $status_class = strtolower(str_replace(' ', '-', $display_status));
                 ?>
                 <div class="return-card">
                     <div class="return-header">
@@ -221,7 +233,7 @@ $return_result = $conn->query($return_sql);
                             </p>
                         </div>
                         <span class="return-status status-<?php echo $status_class; ?>">
-                            <?php echo $request['return_status']; ?>
+                            <?php echo $display_status; ?>
                         </span>
                     </div>
                     
@@ -246,7 +258,7 @@ $return_result = $conn->query($return_sql);
                         </div>
                     </div>
                     
-                    <?php if ($request['return_status'] === 'Chờ duyệt'): ?>
+                    <?php if ($request['order_status'] === 'Chờ xác nhận trả hàng'): ?>
                     <div class="return-actions">
                         <form method="POST" style="display:inline;" onsubmit="return confirm('Xác nhận duyệt yêu cầu trả hàng? Tồn kho sẽ được hoàn lại.')">
                             <input type="hidden" name="order_id" value="<?php echo $request['order_id']; ?>">
